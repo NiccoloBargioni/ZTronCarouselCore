@@ -1,4 +1,5 @@
 {
+  "originHash" : "b692f4a3f0a1f2c940b9927d549c45c4f46cb9bfebed888ef3868ea9c8e1d3c8",
   "pins" : [
     {
       "identity" : "isvimagescrollview",
@@ -28,15 +29,6 @@
       }
     },
     {
-      "identity" : "swiftsvg",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mchoe/SwiftSVG",
-      "state" : {
-        "branch" : "master",
-        "revision" : "88b9ee086b29019e35f6f49c8e30e5552eb8fa9d"
-      }
-    },
-    {
       "identity" : "ztronobservation",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/NiccoloBargioni/ZTronObservation",
@@ -55,5 +47,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

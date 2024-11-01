@@ -15,7 +15,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/SnapKit/SnapKit", branch: "develop"),
         .package(url: "https://github.com/yuriiik/ISVImageScrollView", branch: "master"),
-        .package(url: "https://github.com/mchoe/SwiftSVG", branch: "master"),
         .package(url: "https://github.com/NiccoloBargioni/ZTronObservation", branch: "main"),
         .package(url: "https://github.com/NiccoloBargioni/ZTronVideoPlayer", branch: "main")
     ],

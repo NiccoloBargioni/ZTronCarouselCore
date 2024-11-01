@@ -37,7 +37,7 @@ public class BasicVideoPage: UIViewController, CountedUIVideoPageController {
     internal var skipArrows: UIVideoOverlaySkipArrows!
     
     
-    init?(
+    public init?(
         videoDescriptor: ZTronVideoDescriptor,
         overlayFactory: any UIVideoOverlayFactory = BasicVideoOverlayFactory()
     ) {
