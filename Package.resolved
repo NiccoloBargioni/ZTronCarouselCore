@@ -1,0 +1,59 @@
+{
+  "pins" : [
+    {
+      "identity" : "isvimagescrollview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/yuriiik/ISVImageScrollView",
+      "state" : {
+        "branch" : "master",
+        "revision" : "1202f148508c5498e0d8948b803083e2a091de82"
+      }
+    },
+    {
+      "identity" : "snapkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SnapKit/SnapKit",
+      "state" : {
+        "branch" : "develop",
+        "revision" : "3b5120fa082a847059bc0ca02f99561d6be25c5d"
+      }
+    },
+    {
+      "identity" : "swiftgraph",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/NickTheFreak97/SwiftGraph",
+      "state" : {
+        "branch" : "msa",
+        "revision" : "a00fc9e042d0afff473ef73ea0dc8cd80eca1b28"
+      }
+    },
+    {
+      "identity" : "swiftsvg",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mchoe/SwiftSVG",
+      "state" : {
+        "branch" : "master",
+        "revision" : "88b9ee086b29019e35f6f49c8e30e5552eb8fa9d"
+      }
+    },
+    {
+      "identity" : "ztronobservation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/NiccoloBargioni/ZTronObservation",
+      "state" : {
+        "branch" : "main",
+        "revision" : "23df954c27f5ea4608aa57b264a95fc02dc8a0d8"
+      }
+    },
+    {
+      "identity" : "ztronvideoplayer",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/NiccoloBargioni/ZTronVideoPlayer",
+      "state" : {
+        "branch" : "main",
+        "revision" : "267f2cbea40241878b205a21df05c80f098bd1de"
+      }
+    }
+  ],
+  "version" : 2
+}
