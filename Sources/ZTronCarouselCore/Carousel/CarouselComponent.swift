@@ -35,6 +35,7 @@ internal class CarouselComponent: UIPageViewController, Sendable {
         self.pageFactory = pageFactory
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
         
+        self.delegate = self
         self.dataSource = self
     }
     
@@ -52,9 +53,7 @@ internal class CarouselComponent: UIPageViewController, Sendable {
     
     override internal func viewDidLoad() {
         super.viewDidLoad()
-        
-        delegate = self
-        
+                        
         let pageControls = UIPageControl()
         pageControls.numberOfPages = 20
         pageControls.addTarget(self, action: #selector(self.pageControlsChanged(_:)), for: .valueChanged)
