@@ -67,8 +67,6 @@ internal class CarouselComponent: UIPageViewController, Sendable {
         }
         
         self.pageControls = pageControls
-               
-        self.dataSource = nil
     }
     
     
