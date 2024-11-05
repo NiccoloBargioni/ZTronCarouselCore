@@ -4,7 +4,7 @@ import SnapKit
 public final class Carousel16_9Page: UIViewController {
     private let pageFactory: any MediaFactory
     private let medias: [any VisualMediaDescriptor]
-    private var pauseLayoutSubviews: Bool = false
+    
     
     // this will hold the page view controller
     private let myContainerView: UIView = {
@@ -83,26 +83,24 @@ public final class Carousel16_9Page: UIViewController {
     }
     
     override public func viewDidLayoutSubviews() {
-        if !self.pauseLayoutSubviews {
-            super.viewDidLayoutSubviews()
+        super.viewDidLayoutSubviews()
+        
+        // only execute this code block if the view frame has changed
+        //    such as on device rotation
+        if curWidth != myContainerView.frame.width {
+            curWidth = myContainerView.frame.width
             
-            // only execute this code block if the view frame has changed
-            //    such as on device rotation
-            if curWidth != myContainerView.frame.width {
-                curWidth = myContainerView.frame.width
-                
-                // cannot directly change a constraint multiplier, so
-                //    deactivate / create new / reactivate
-                let size = self.computeContentSizeThatFits()
-                
-                pgvcHeight.isActive = false
-                pgvcHeight = self.myContainerView.heightAnchor.constraint(equalToConstant: size.height)
-                pgvcHeight.isActive = true
-                
-                pgvcWidth.isActive = false
-                pgvcWidth = self.myContainerView.widthAnchor.constraint(equalToConstant: size.width)
-                pgvcWidth.isActive = true
-            }
+            // cannot directly change a constraint multiplier, so
+            //    deactivate / create new / reactivate
+            let size = self.computeContentSizeThatFits()
+            
+            pgvcHeight.isActive = false
+            pgvcHeight = self.myContainerView.heightAnchor.constraint(equalToConstant: size.height)
+            pgvcHeight.isActive = true
+            
+            pgvcWidth.isActive = false
+            pgvcWidth = self.myContainerView.widthAnchor.constraint(equalToConstant: size.width)
+            pgvcWidth.isActive = true
         }
     }
     
@@ -115,7 +113,6 @@ public final class Carousel16_9Page: UIViewController {
         super.viewWillTransition(to: size, with: coordinator)
         
         self.view.layoutIfNeeded()
-        self.pauseLayoutSubviews = true
         
         coordinator.animate { _ in
             UIView.animate(withDuration: 0.25) {
@@ -129,9 +126,6 @@ public final class Carousel16_9Page: UIViewController {
                 
                 self.view.layoutIfNeeded()
             }
-        } completion: { _ in
-            self.pauseLayoutSubviews = false
-            self.view.layoutIfNeeded()
         }
     }
 }
