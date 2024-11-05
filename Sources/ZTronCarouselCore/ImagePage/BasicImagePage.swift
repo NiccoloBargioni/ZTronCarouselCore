@@ -7,6 +7,7 @@ open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIView
     public var pageIndex: Int = 0
     
     public let imageView: UIImageView!
+    private var pauseLayoutSubviews: Bool = false
     
     public let scrollView: ISVImageScrollView = {
         let scrollView = ISVImageScrollView()
@@ -21,8 +22,10 @@ open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIView
     }()
     
     override open func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        print("\(#function) @ \(String(describing: Self.self))(\(self.pageIndex))")
+        if !self.pauseLayoutSubviews {
+            super.viewDidLayoutSubviews()
+            print("\(#function) @ \(String(describing: Self.self))(\(self.pageIndex))")
+        }
     }
         
 
@@ -54,4 +57,19 @@ open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIView
     public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return self.imageView
     }
+    
+    override open func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        self.view.layoutIfNeeded()
+        self.pauseLayoutSubviews = true
+        
+        coordinator.animate { _ in
+            
+        } completion: { _ in
+            self.pauseLayoutSubviews = false
+            self.view.layoutIfNeeded()
+        }
+    }
+    
 }
