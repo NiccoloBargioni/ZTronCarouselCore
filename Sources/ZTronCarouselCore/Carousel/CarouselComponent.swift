@@ -4,6 +4,7 @@ import ZTronObservation
 internal class CarouselComponent: UIPageViewController, Sendable {
     private let medias: [any VisualMediaDescriptor]
     private let pageFactory: MediaFactory!
+    private var pauseLayoutSubviews: Bool = false
     
     private var pageControls: UIPageControl!
     private var lastSeenPageIndex: Int = -1
@@ -93,11 +94,26 @@ internal class CarouselComponent: UIPageViewController, Sendable {
     
     
     override internal func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        print("\(#function) @ \(String(describing: Self.self))")
+        if !self.pauseLayoutSubviews {
+            super.viewDidLayoutSubviews()
+            print("\(#function) @ \(String(describing: Self.self))")
+        }
     }
 
-    
+
+    override internal func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        self.view.layoutIfNeeded()
+        self.pauseLayoutSubviews = true
+        
+        coordinator.animate { _ in
+            
+        } completion: { _ in
+            self.pauseLayoutSubviews = false
+            self.view.layoutIfNeeded()
+        }
+    }
 }
 
 extension CarouselComponent: UIPageViewControllerDataSource {
