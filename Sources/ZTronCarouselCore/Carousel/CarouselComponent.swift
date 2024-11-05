@@ -9,7 +9,7 @@ internal class CarouselComponent: UIPageViewController, Sendable {
     private var lastSeenPageIndex: Int = -1
     
     private let makeVCLock = DispatchSemaphore(value: 1)
-    
+        
     override public var dataSource: (any UIPageViewControllerDataSource)? {
         willSet {
             guard newValue != nil else { return }
@@ -55,7 +55,7 @@ internal class CarouselComponent: UIPageViewController, Sendable {
         super.viewDidLoad()
                         
         let pageControls = UIPageControl()
-        pageControls.numberOfPages = 20
+        pageControls.numberOfPages = self.medias.count
         pageControls.addTarget(self, action: #selector(self.pageControlsChanged(_:)), for: .valueChanged)
 
         
@@ -89,6 +89,14 @@ internal class CarouselComponent: UIPageViewController, Sendable {
         
         return newVC
     }
+    
+    
+    
+    override internal func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        print("\(#function) @ \(String(describing: Self.self))")
+    }
+
     
 }
 

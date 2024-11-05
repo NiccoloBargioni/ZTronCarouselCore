@@ -19,6 +19,11 @@ open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIView
 
         return scrollView
     }()
+    
+    override open func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        print("\(#function) @ \(String(describing: Self.self))(\(self.pageIndex))")
+    }
         
 
     public init(imageDescriptor: ZTronImageDescriptor) {
