@@ -1,5 +1,4 @@
 import UIKit
-import ZTronObservation
 
 internal class CarouselComponent: UIPageViewController, Sendable {
     private let medias: [any VisualMediaDescriptor]
