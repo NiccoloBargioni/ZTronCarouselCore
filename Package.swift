@@ -15,7 +15,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/SnapKit/SnapKit", branch: "develop"),
         .package(url: "https://github.com/yuriiik/ISVImageScrollView", branch: "master"),
-        .package(url: "https://github.com/NiccoloBargioni/ZTronObservation", branch: "main"),
         .package(url: "https://github.com/NiccoloBargioni/ZTronVideoPlayer", branch: "main")
     ],
     targets: [
@@ -26,7 +25,6 @@ let package = Package(
             dependencies: [
                 .product(name: "SnapKit", package: "SnapKit"),
                 .product(name: "ISVImageScrollView", package: "ISVImageScrollView"),
-                .product(name: "ZTronObservation", package: "ZTronObservation"),
                 .product(name: "ZTronVideoPlayer", package: "ZTronVideoPlayer")
             ],
             swiftSettings: [

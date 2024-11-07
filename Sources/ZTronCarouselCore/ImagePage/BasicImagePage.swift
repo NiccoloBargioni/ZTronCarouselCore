@@ -24,7 +24,7 @@ open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIView
     public init(imageDescriptor: ZTronImageDescriptor) {
         print(#function)
                 
-        let image = UIImage(named: imageDescriptor.getAssetName())!
+        let image = UIImage(named: imageDescriptor.getAssetName(), in: imageDescriptor.getBundle(), with: nil)!
         let imageView = UIImageView(image: image)
 
         self.imageView = imageView
