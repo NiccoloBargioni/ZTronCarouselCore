@@ -1,7 +1,7 @@
 import UIKit
 import SnapKit
 
-public final class Carousel16_9Page: UIViewController {
+@MainActor public final class Carousel16_9Page: UIViewController {
     private let pageFactory: any MediaFactory
     private let medias: [any VisualMediaDescriptor]
     
@@ -125,6 +125,16 @@ public final class Carousel16_9Page: UIViewController {
                 self.pgvcWidth.isActive = true
                 
                 self.view.layoutIfNeeded()
+            } completion: { animationCompleted in
+                if animationCompleted {
+                    self.view.layoutIfNeeded()
+                } else {
+                    DispatchQueue.main.async {
+                        Task(priority: .userInitiated) { @MainActor in
+                            self.view.layoutIfNeeded()
+                        }
+                    }
+                }
             }
         }
     }
