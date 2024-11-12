@@ -1,6 +1,6 @@
 import UIKit
 
-internal class CarouselComponent: UIPageViewController, Sendable {
+public class CarouselComponent: UIPageViewController, Sendable {
     private let medias: [any VisualMediaDescriptor]
     private let pageFactory: MediaFactory!
     
@@ -26,7 +26,7 @@ internal class CarouselComponent: UIPageViewController, Sendable {
         }
     }
     
-    internal init(
+    public init(
         with pageFactory: MediaFactory = BasicMediaFactory(),
         medias: [any VisualMediaDescriptor]
     ) {
@@ -50,7 +50,7 @@ internal class CarouselComponent: UIPageViewController, Sendable {
         return nil
     }
     
-    override internal func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
                         
         let pageControls = UIPageControl()
@@ -93,7 +93,7 @@ internal class CarouselComponent: UIPageViewController, Sendable {
 
 extension CarouselComponent: UIPageViewControllerDataSource {
     
-    internal func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+    public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
 
         guard let vc = viewController as? CountedUIViewController else { return nil }
                 
@@ -106,7 +106,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         return newVC
     }
     
-    internal func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+    public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
 
         guard let vc = viewController as? (any CountedUIViewController) else { return nil }
                 
@@ -141,7 +141,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
 }
 
 extension CarouselComponent: UIPageViewControllerDelegate {
-    internal func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+    public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
         
         DispatchQueue.main.async { @MainActor in
             self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
