@@ -1,13 +1,24 @@
 import UIKit
+import os
 
+@MainActor
 public class CarouselComponent: UIPageViewController, Sendable {
-    private let medias: [any VisualMediaDescriptor]
+    private var medias: [any VisualMediaDescriptor]
     private let pageFactory: MediaFactory!
     
     private var pageControls: UIPageControl!
     private var lastSeenPageIndex: Int = -1
     
     private let makeVCLock = DispatchSemaphore(value: 1)
+    private static let logger: os.Logger = .init(subsystem: "ZTronCarouselCore", category: "CarouselComponent")
+    
+    public var currentPage: Int {
+        return self.pageControls.currentPage
+    }
+    
+    public var numberOfPages: Int {
+        return self.medias.count
+    }
     
     override public var dataSource: (any UIPageViewControllerDataSource)? {
         willSet {
@@ -69,7 +80,6 @@ public class CarouselComponent: UIPageViewController, Sendable {
     }
     
     
-    @MainActor
     private final func makeViewControllerFor(mediaIndex: Int) -> any CountedUIViewController {
         assert(mediaIndex >= 0 && mediaIndex < self.medias.count)
         
@@ -89,6 +99,48 @@ public class CarouselComponent: UIPageViewController, Sendable {
         return newVC
     }
     
+    
+    private final func _replaceMedia(with other: any VisualMediaDescriptor, at index: Int) {
+        if index < 0 || index >= self.medias.count {
+        #if DEBUG
+            Self.logger.warning("Attempted to replace a media at index \(index) when the valid range is [0,\(self.medias.count))")
+        #endif
+            return
+        }
+        
+        self.medias[index] = other
+        
+        if index == self.currentPage {
+            let newVC = self.makeViewControllerFor(mediaIndex: index)
+            self.setViewControllers([newVC], direction: .forward, animated: false)
+        }
+    }
+    
+    public final func replaceMedia(with other: any VisualMediaDescriptor, at index: Int) {
+        self._replaceMedia(with: other, at: index)
+    }
+    
+    
+    public final func replaceAllMedias(with other: [any VisualMediaDescriptor]) {
+        assert(other.count > 0)
+        
+        Task(priority: .userInitiated) { @MainActor in
+            self.pageControls.numberOfPages = other.count
+            self.pageControls.currentPage = 0
+        }
+        
+        self.medias = other
+        
+        let newVC = self.makeViewControllerFor(mediaIndex: 0)
+        
+        self.setViewControllers(
+            [newVC],
+            direction: self.lastSeenPageIndex > 0 ? .reverse : .forward,
+            animated: self.lastSeenPageIndex > 0
+        )
+        
+        self.lastSeenPageIndex = 0
+    }
 }
 
 extension CarouselComponent: UIPageViewControllerDataSource {
@@ -143,7 +195,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
 extension CarouselComponent: UIPageViewControllerDelegate {
     public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
         
-        DispatchQueue.main.async { @MainActor in
+        Task(priority: .userInitiated) { @MainActor in
             self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
         }
         
