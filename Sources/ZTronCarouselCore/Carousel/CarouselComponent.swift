@@ -112,6 +112,11 @@ public class CarouselComponent: UIPageViewController, Sendable {
         
         if index == self.currentPage {
             let newVC = self.makeViewControllerFor(mediaIndex: index)
+            self.viewControllers?.forEach { currentVC in
+                guard let currentVC = currentVC as? CountedUIViewController else { return }
+                currentVC.dismantle()
+            }
+            
             self.setViewControllers([newVC], direction: .forward, animated: false)
         }
     }
@@ -132,6 +137,11 @@ public class CarouselComponent: UIPageViewController, Sendable {
         self.medias = other
         
         let newVC = self.makeViewControllerFor(mediaIndex: 0)
+        
+        self.viewControllers?.forEach { currentVC in
+            guard let currentVC = currentVC as? CountedUIViewController else { return }
+            currentVC.dismantle()
+        }
         
         self.setViewControllers(
             [newVC],

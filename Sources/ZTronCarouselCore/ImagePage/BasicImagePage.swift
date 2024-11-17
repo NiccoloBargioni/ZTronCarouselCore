@@ -49,4 +49,8 @@ open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIView
     public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return self.imageView
     }
+    
+    public func dismantle() {
+        
+    }
 }
