@@ -50,7 +50,7 @@ open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIView
         return self.imageView
     }
     
-    public func dismantle() {
+    open func dismantle() {
         
     }
 }
