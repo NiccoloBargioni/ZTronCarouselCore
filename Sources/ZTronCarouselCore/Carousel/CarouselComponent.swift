@@ -188,7 +188,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         
         let newVC = self.makeViewControllerFor(mediaIndex: newPageIndex % self.medias.count)
         
-        if let vc = self.viewControllers?.first as? any CountedUIVideoPageController {
+        if let vc = self.viewControllers?.first as? any CountedUIViewController {
             vc.dismantle()
         }
         
@@ -210,7 +210,7 @@ extension CarouselComponent: UIPageViewControllerDelegate {
         }
         
         previousViewControllers.forEach { controller in
-            guard let controller = (controller as? any CountedUIVideoPageController) else { return }
+            guard let controller = (controller as? any CountedUIViewController) else { return }
             controller.dismantle()
         }
     }
