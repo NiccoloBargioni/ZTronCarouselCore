@@ -205,13 +205,23 @@ extension CarouselComponent: UIPageViewControllerDataSource {
 extension CarouselComponent: UIPageViewControllerDelegate {
     public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
         
-        Task(priority: .userInitiated) { @MainActor in
-            self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
-        }
-        
-        previousViewControllers.forEach { controller in
-            guard let controller = (controller as? any CountedUIViewController) else { return }
-            controller.dismantle()
+        if let previousVisibleController = previousViewControllers.first as? CountedUIViewController {
+            if previousVisibleController.pageIndex != self.pageControls.currentPage {
+                // if page changed
+                Task(priority: .userInitiated) { @MainActor in
+                    self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+                }
+
+                previousViewControllers.forEach { controller in
+                    guard let controller = (controller as? any CountedUIViewController) else { return }
+                    controller.dismantle()
+                }
+            }
+        } else {
+            // ViewControllers was empty
+            Task(priority: .userInitiated) { @MainActor in
+                self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+            }
         }
     }
 }
