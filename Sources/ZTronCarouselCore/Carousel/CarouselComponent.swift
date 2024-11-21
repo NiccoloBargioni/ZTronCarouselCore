@@ -1,8 +1,12 @@
 import UIKit
+import ZTronObservation
+import SkeletonView
 import os
 
 @MainActor
-public class CarouselComponent: UIPageViewController, Sendable {
+public class CarouselComponent: UIPageViewController, Sendable, Component {
+    public let id: String
+    
     private var medias: [any VisualMediaDescriptor]
     private let pageFactory: MediaFactory!
     
@@ -11,9 +15,30 @@ public class CarouselComponent: UIPageViewController, Sendable {
     
     private let makeVCLock = DispatchSemaphore(value: 1)
     private static let logger: os.Logger = .init(subsystem: "ZTronCarouselCore", category: "CarouselComponent")
+    private(set) public var lastAction: CarouselComponent.LastAction = .ready
+    
+    nonisolated lazy private var interactionsManager: (any MSAInteractionsManager)? = nil {
+        didSet {
+            guard let delegate = self.interactionsManager else { return }
+            delegate.setup(or: .replace)
+        }
+        
+        willSet {
+            guard let delegate = self.interactionsManager else { return }
+            delegate.detach(or: .ignore)
+        }
+    }
     
     public var currentPage: Int {
         return self.pageControls.currentPage
+    }
+    
+    public var currentMediaDescriptor: (any VisualMediaDescriptor)? {
+        if self.currentPage >= 0 && self.currentPage < self.medias.count {
+            return self.medias[self.currentPage]
+        } else {
+            return nil
+        }
     }
     
     public var numberOfPages: Int {
@@ -31,8 +56,11 @@ public class CarouselComponent: UIPageViewController, Sendable {
         didSet {
             if dataSource == nil {
                 // TODO: Show skeleton
+                self.view.isSkeletonable = true
+                self.view.showAnimatedGradientSkeleton()
             } else {
                 // TODO: Hide skeleton
+                self.view.stopSkeletonAnimation()
             }
         }
     }
@@ -41,6 +69,7 @@ public class CarouselComponent: UIPageViewController, Sendable {
         with pageFactory: MediaFactory = BasicMediaFactory(),
         medias: [any VisualMediaDescriptor]
     ) {
+        self.id = "carousel"
         self.medias = medias
         self.pageFactory = pageFactory
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
@@ -100,7 +129,7 @@ public class CarouselComponent: UIPageViewController, Sendable {
     }
     
     
-    private final func _replaceMedia(with other: any VisualMediaDescriptor, at index: Int) {
+    private final func _replaceMedia(with other: any VisualMediaDescriptor, at index: Int, shouldReplaceViewController: Bool = true) {
         if index < 0 || index >= self.medias.count {
         #if DEBUG
             Self.logger.warning("Attempted to replace a media at index \(index) when the valid range is [0,\(self.medias.count))")
@@ -110,19 +139,26 @@ public class CarouselComponent: UIPageViewController, Sendable {
         
         self.medias[index] = other
         
-        if index == self.currentPage {
-            let newVC = self.makeViewControllerFor(mediaIndex: index)
-            self.viewControllers?.forEach { currentVC in
-                guard let currentVC = currentVC as? CountedUIViewController else { return }
-                currentVC.dismantle()
+        if shouldReplaceViewController {
+            if index == self.currentPage {
+                let newVC = self.makeViewControllerFor(mediaIndex: index)
+                self.viewControllers?.forEach { currentVC in
+                    guard let currentVC = currentVC as? CountedUIViewController else { return }
+                    currentVC.dismantle()
+                }
+                
+                self.setViewControllers([newVC], direction: .forward, animated: false)
+                self.lastAction = .replacedCurrentMedia
+                self.pushNotification()
             }
-            
-            self.setViewControllers([newVC], direction: .forward, animated: false)
+        } else {
+            self.lastAction = .replacedCurrentDescriptor
+            self.pushNotification()
         }
     }
     
-    public final func replaceMedia(with other: any VisualMediaDescriptor, at index: Int) {
-        self._replaceMedia(with: other, at: index)
+    public final func replaceMedia(with other: any VisualMediaDescriptor, at index: Int, shouldReplaceViewController: Bool = true) {
+        self._replaceMedia(with: other, at: index, shouldReplaceViewController: shouldReplaceViewController)
     }
     
     
@@ -150,6 +186,33 @@ public class CarouselComponent: UIPageViewController, Sendable {
         )
         
         self.lastSeenPageIndex = 0
+        self.lastAction = .replacedAllMedias
+        self.pushNotification()
+    }
+    
+    nonisolated public func getDelegate() -> (any ZTronObservation.InteractionsManager)? {
+        return self.interactionsManager
+    }
+    
+    nonisolated public func setDelegate(_ interactionsManager: (any ZTronObservation.InteractionsManager)?) {
+        guard let interactionsManager = interactionsManager as? MSAInteractionsManager else {
+            if interactionsManager == nil {
+                self.interactionsManager = nil
+            } else {
+                fatalError("Expected interactionsManager of type \(String(describing: MSAInteractionsManager.self)) @ \(#function) in \(#file).")
+            }
+            
+            return
+        }
+        
+        self.interactionsManager = interactionsManager
+    }
+    
+    
+    private func pushNotification() {
+        Task(priority: .userInitiated) {
+            self.getDelegate()?.pushNotification(eventArgs: .init(source: self))
+        }
     }
 }
 
@@ -198,7 +261,18 @@ extension CarouselComponent: UIPageViewControllerDataSource {
             animated: true
         )
         
+        self.lastAction = .pageChanged
+        self.pushNotification()
+        
         self.lastSeenPageIndex = newPageIndex
+    }
+    
+    public enum LastAction: Sendable {
+        case ready
+        case replacedAllMedias
+        case replacedCurrentMedia
+        case replacedCurrentDescriptor
+        case pageChanged
     }
 }
 

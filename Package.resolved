@@ -1,5 +1,5 @@
 {
-  "originHash" : "da5c5a3c80ed692695046f52f059113adff2f3ca91dddff7e9c7f782d5ca130b",
+  "originHash" : "9036842ca3bc8a1c43072c3691d4e0c6f4e5a6ae0902042bef56de5d87737e90",
   "pins" : [
     {
       "identity" : "isvimagescrollview",
@@ -11,12 +11,39 @@
       }
     },
     {
+      "identity" : "skeletonview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Juanpe/SkeletonView",
+      "state" : {
+        "branch" : "main",
+        "revision" : "30c92f0992888e7b249e788405ac31e2103f5c69"
+      }
+    },
+    {
       "identity" : "snapkit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SnapKit/SnapKit",
       "state" : {
         "branch" : "develop",
         "revision" : "3b5120fa082a847059bc0ca02f99561d6be25c5d"
+      }
+    },
+    {
+      "identity" : "swiftgraph",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/NickTheFreak97/SwiftGraph",
+      "state" : {
+        "branch" : "msa",
+        "revision" : "615085465d81f7a7ff176f13029b19f873773409"
+      }
+    },
+    {
+      "identity" : "ztronobservation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/NiccoloBargioni/ZTronObservation",
+      "state" : {
+        "branch" : "bugfix/threadSafety",
+        "revision" : "95518efa06fec65718f78d3f920fcc0e692d7a2f"
       }
     },
     {
