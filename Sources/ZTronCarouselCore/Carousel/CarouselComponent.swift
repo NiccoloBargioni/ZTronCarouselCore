@@ -207,7 +207,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     }
     
     
-    private func pushNotification() {
+    nonisolated private func pushNotification() {
         Task(priority: .userInitiated) {
             self.getDelegate()?.pushNotification(eventArgs: .init(source: self))
         }
@@ -241,7 +241,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         return newVC
     }
     
-    @objc private func pageControlsChanged(_ sender: UIPageControl) {
+    @MainActor @objc private func pageControlsChanged(_ sender: UIPageControl) {
         let newPageIndex = sender.currentPage
         // assert(newPageIndex >= 0 && newPageIndex <= self.medias.count)
         
@@ -277,13 +277,13 @@ extension CarouselComponent: UIPageViewControllerDataSource {
 extension CarouselComponent: UIPageViewControllerDelegate {
     public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
         
+        Task(priority: .userInitiated) { @MainActor in
+            self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+        }
+
+        
         if let previousVisibleController = previousViewControllers.first as? CountedUIViewController {
             if previousVisibleController.pageIndex != self.pageControls.currentPage {
-                // if page changed
-                Task(priority: .userInitiated) { @MainActor in
-                    self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
-                }
-
                 previousViewControllers.forEach { controller in
                     guard let controller = (controller as? any CountedUIViewController) else { return }
                     controller.dismantle()
