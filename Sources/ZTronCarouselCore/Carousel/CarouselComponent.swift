@@ -73,6 +73,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     ) {
         self.id = "carousel"
         self.medias = medias
+        
         self.pageFactory = pageFactory
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
         
@@ -97,6 +98,9 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
                         
         let pageControls = UIPageControl()
         pageControls.numberOfPages = self.medias.count
+        
+        print("View controllers \(#function) are \(self.viewControllers?.count ?? -1)")
+        
         pageControls.addTarget(self, action: #selector(self.pageControlsChanged(_:)), for: .valueChanged)
 
         
