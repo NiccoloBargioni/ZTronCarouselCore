@@ -54,6 +54,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
             } else {
                 // TODO: Hide skeleton
                 self.view.stopSkeletonAnimation()
+                self.view.hideSkeleton()
                 
                 if self.medias.count > 0 {
                     let firstVC = self.makeViewControllerFor(mediaIndex: 0)
