@@ -56,10 +56,8 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
                 self.view.stopSkeletonAnimation()
                 self.view.hideSkeleton()
                 
-                if self.medias.count > 0 {
-                    let firstVC = self.makeViewControllerFor(mediaIndex: 0)
-                    self.setViewControllers([firstVC], direction: .forward, animated: false)
-                }
+                let firstVC = self.makeViewControllerFor(mediaIndex: 0)
+                self.setViewControllers([firstVC], direction: .forward, animated: false)
             }
         }
     }
