@@ -148,7 +148,6 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         return newVC
     }
     
-    
     private final func _replaceMedia(with other: any VisualMediaDescriptor, at index: Int, shouldReplaceViewController: Bool = true) {
         if index < 0 || index >= self.medias.count {
         #if DEBUG
@@ -231,13 +230,6 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         }
         
         self.interactionsManager = interactionsManager
-    }
-    
-    
-    nonisolated private func pushNotification() {
-        Task(priority: .userInitiated) {
-            self.getDelegate()?.pushNotification(eventArgs: .init(source: self))
-        }
     }
 }
 
