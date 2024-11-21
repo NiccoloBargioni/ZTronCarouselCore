@@ -96,20 +96,16 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     override public func viewDidLoad() {
         super.viewDidLoad()
                         
+        if self.medias.count > 0 {
+            self.makePageControlsAndAddToSuperview()
+        }
+    }
+    
+    
+    private final func makePageControlsAndAddToSuperview() {
         let pageControls = UIPageControl()
         pageControls.numberOfPages = self.medias.count
-        
-        if self.viewControllers?.count ?? 0 <= 0 {
-            if self.medias.count > 0 {
-                let newVC = self.makeViewControllerFor(mediaIndex: 0)
-                self.setViewControllers([newVC], direction: .reverse, animated: false)
-            } else {
-                self.setViewControllers([self.makePlaceholder()], direction: .reverse, animated: false)
-            }
-        }
-        
         pageControls.addTarget(self, action: #selector(self.pageControlsChanged(_:)), for: .valueChanged)
-
         
         self.view.addSubview(pageControls)
         
@@ -120,7 +116,6 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         self.pageControls = pageControls
     }
-    
     
     private final func makeViewControllerFor(mediaIndex: Int) -> any CountedUIViewController {
         assert(mediaIndex >= 0 && mediaIndex < self.medias.count)
@@ -189,6 +184,11 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     
     public final func replaceAllMedias(with other: [any VisualMediaDescriptor]) {
         assert(other.count > 0)
+        
+        if self.medias.count <= 0 {
+            self.makePageControlsAndAddToSuperview()
+            self.view.layoutIfNeeded()
+        }
         
         Task(priority: .userInitiated) { @MainActor in
             self.pageControls.numberOfPages = other.count
