@@ -99,7 +99,14 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         let pageControls = UIPageControl()
         pageControls.numberOfPages = self.medias.count
         
-        print("View controllers \(#function) are \(self.viewControllers?.count ?? -1)")
+        if self.viewControllers?.count ?? 0 <= 0 {
+            if self.medias.count > 0 {
+                let newVC = self.makeViewControllerFor(mediaIndex: 0)
+                self.setViewControllers([newVC], direction: .reverse, animated: false)
+            } else {
+                self.setViewControllers([self.makePlaceholder()], direction: .reverse, animated: false)
+            }
+        }
         
         pageControls.addTarget(self, action: #selector(self.pageControlsChanged(_:)), for: .valueChanged)
 
