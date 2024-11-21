@@ -117,7 +117,6 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     
     private final func makeViewControllerFor(mediaIndex: Int) -> any CountedUIViewController {
         assert(mediaIndex >= 0 && mediaIndex < self.medias.count)
-        
         var newVC: (any CountedUIViewController)? = nil
         
         if self.lastAction != .placeholder {
@@ -128,7 +127,6 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
                 newVC = self.pageFactory.makeVideoPage(for: self.medias[mediaIndex] as! ZTronVideoDescriptor)
             }
             
-            
             guard let newVC = newVC else { fatalError("Unable to make page for media \(medias[mediaIndex])") }
         } else {
             let newVC = BasicMediaFactory().makeImagePage(for: self.medias[0] as! ZTronImageDescriptor)
@@ -136,7 +134,6 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         newVC?.pageIndex = mediaIndex
         return newVC!
-
     }
     
     
@@ -176,6 +173,10 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     public final func replaceAllMedias(with other: [any VisualMediaDescriptor]) {
         let showPlaceHolder = other.count <= 0
         let other = other.count > 0 ? other : [ZTronImageDescriptor(assetName: "placeholder", in: .module)]
+        
+        if showPlaceHolder {
+            self.lastAction = .placeholder
+        }
 
         Task(priority: .userInitiated) { @MainActor in
             self.pageControls.numberOfPages = other.count
@@ -198,10 +199,8 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         )
         
         self.lastSeenPageIndex = 0
-        
-        if showPlaceHolder {
-            self.lastAction = .placeholder
-        } else {
+
+        if !showPlaceHolder {
             self.lastAction = .replacedAllMedias
         }
         
