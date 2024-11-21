@@ -10,7 +10,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     private var medias: [any VisualMediaDescriptor]
     private let pageFactory: MediaFactory!
     
-    private var pageControls: UIPageControl!
+    private var pageControls: UIPageControl?
     private var lastSeenPageIndex: Int = -1
     
     private let makeVCLock = DispatchSemaphore(value: 1)
@@ -30,7 +30,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     }
     
     public var currentPage: Int {
-        return self.pageControls.currentPage
+        return self.pageControls?.currentPage ?? 0
     }
     
     public var currentMediaDescriptor: (any VisualMediaDescriptor)? {
@@ -142,7 +142,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         newVC.pageIndex = 0
         
         Task(priority: .userInitiated) { @MainActor in
-            self.pageControls.currentPage = 0
+            self.pageControls?.currentPage = 0
         }
         
         return newVC
@@ -191,8 +191,8 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         }
         
         Task(priority: .userInitiated) { @MainActor in
-            self.pageControls.numberOfPages = other.count
-            self.pageControls.currentPage = 0
+            self.pageControls?.numberOfPages = other.count
+            self.pageControls?.currentPage = 0
         }
         
         self.medias = other
@@ -303,14 +303,13 @@ extension CarouselComponent: UIPageViewControllerDataSource {
 
 extension CarouselComponent: UIPageViewControllerDelegate {
     public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        
         Task(priority: .userInitiated) { @MainActor in
-            self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+            self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
         }
 
         
         if let previousVisibleController = previousViewControllers.first as? CountedUIViewController {
-            if previousVisibleController.pageIndex != self.pageControls.currentPage {
+            if previousVisibleController.pageIndex != self.pageControls?.currentPage {
                 previousViewControllers.forEach { controller in
                     guard let controller = (controller as? any CountedUIViewController) else { return }
                     controller.dismantle()
@@ -319,7 +318,7 @@ extension CarouselComponent: UIPageViewControllerDelegate {
         } else {
             // ViewControllers was empty
             Task(priority: .userInitiated) { @MainActor in
-                self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+                self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
             }
         }
     }
