@@ -54,10 +54,11 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
             } else {
                 // TODO: Hide skeleton
                 self.view.stopSkeletonAnimation()
-                self.view.hideSkeleton()
                 
-                let firstVC = self.makeViewControllerFor(mediaIndex: 0)
-                self.setViewControllers([firstVC], direction: .forward, animated: false)
+                if self.medias.count > 0 {
+                    let firstVC = self.makeViewControllerFor(mediaIndex: 0)
+                    self.setViewControllers([firstVC], direction: .forward, animated: false)
+                }
             }
         }
     }
@@ -70,13 +71,6 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         self.medias = medias
         self.pageFactory = pageFactory
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-       
-        if self.medias.count <= 0 {
-            self.lastAction = .placeholder
-            self.medias = [
-                ZTronImageDescriptor(assetName: "placeholder", in: .module)
-            ]
-        }
         
         self.delegate = self
         self.dataSource = self
@@ -115,21 +109,21 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     
     private final func makeViewControllerFor(mediaIndex: Int) -> any CountedUIViewController {
         assert(mediaIndex >= 0 && mediaIndex < self.medias.count)
+        
         var newVC: (any CountedUIViewController)? = nil
         
-        if self.lastAction != .placeholder {
-            switch self.medias[mediaIndex].type {
-            case .image:
-                newVC = self.pageFactory.makeImagePage(for: self.medias[mediaIndex] as! ZTronImageDescriptor)
-            case .video:
-                newVC = self.pageFactory.makeVideoPage(for: self.medias[mediaIndex] as! ZTronVideoDescriptor)
-            }
-        } else {
-            newVC = BasicMediaFactory().makeImagePage(for: self.medias[0] as! ZTronImageDescriptor)
+        switch self.medias[mediaIndex].type {
+        case .image:
+            newVC = self.pageFactory.makeImagePage(for: self.medias[mediaIndex] as! ZTronImageDescriptor)
+        case .video:
+            newVC = self.pageFactory.makeVideoPage(for: self.medias[mediaIndex] as! ZTronVideoDescriptor)
         }
         
-        newVC?.pageIndex = mediaIndex
-        return newVC!
+        
+        guard let newVC = newVC else { fatalError("Unable to make page for media \(medias[mediaIndex])") }
+        newVC.pageIndex = mediaIndex
+        
+        return newVC
     }
     
     
@@ -167,13 +161,8 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     
     
     public final func replaceAllMedias(with other: [any VisualMediaDescriptor]) {
-        let showPlaceHolder = other.count <= 0
-        let other = other.count > 0 ? other : [ZTronImageDescriptor(assetName: "placeholder", in: .module)]
+        assert(other.count > 0)
         
-        if showPlaceHolder {
-            self.lastAction = .placeholder
-        }
-
         Task(priority: .userInitiated) { @MainActor in
             self.pageControls.numberOfPages = other.count
             self.pageControls.currentPage = 0
@@ -195,11 +184,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         )
         
         self.lastSeenPageIndex = 0
-
-        if !showPlaceHolder {
-            self.lastAction = .replacedAllMedias
-        }
-        
+        self.lastAction = .replacedAllMedias
         self.pushNotification()
     }
     
@@ -282,7 +267,6 @@ extension CarouselComponent: UIPageViewControllerDataSource {
     
     public enum LastAction: Sendable {
         case ready
-        case placeholder
         case replacedAllMedias
         case replacedCurrentMedia
         case replacedCurrentDescriptor
