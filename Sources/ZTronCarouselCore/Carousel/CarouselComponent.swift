@@ -59,6 +59,8 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
                 if self.medias.count > 0 {
                     let firstVC = self.makeViewControllerFor(mediaIndex: 0)
                     self.setViewControllers([firstVC], direction: .forward, animated: false)
+                } else {
+                    self.setViewControllers([self.makePlaceholder()], direction: .reverse, animated: false)
                 }
             }
         }
@@ -123,6 +125,18 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         guard let newVC = newVC else { fatalError("Unable to make page for media \(medias[mediaIndex])") }
         newVC.pageIndex = mediaIndex
+        
+        return newVC
+    }
+    
+    
+    private final func makePlaceholder() -> any CountedUIViewController {
+        let newVC = BasicMediaFactory().makeImagePage(for: .init(assetName: "placeholder", in: .module))
+        newVC.pageIndex = 0
+        
+        Task(priority: .userInitiated) { @MainActor in
+            self.pageControls.currentPage = 0
+        }
         
         return newVC
     }
