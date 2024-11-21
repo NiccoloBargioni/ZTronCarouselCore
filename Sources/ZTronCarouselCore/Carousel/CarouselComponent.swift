@@ -46,13 +46,6 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     }
     
     override public var dataSource: (any UIPageViewControllerDataSource)? {
-        willSet {
-            guard newValue != nil else { return }
-            
-            let firstVC = self.makeViewControllerFor(mediaIndex: 0)
-            self.setViewControllers([firstVC], direction: .forward, animated: false)
-        }
-        
         didSet {
             if dataSource == nil {
                 // TODO: Show skeleton
@@ -61,6 +54,11 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
             } else {
                 // TODO: Hide skeleton
                 self.view.stopSkeletonAnimation()
+                
+                if self.medias.count > 0 {
+                    let firstVC = self.makeViewControllerFor(mediaIndex: 0)
+                    self.setViewControllers([firstVC], direction: .forward, animated: false)
+                }
             }
         }
     }
