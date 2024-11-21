@@ -15,7 +15,9 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/SnapKit/SnapKit", branch: "develop"),
         .package(url: "https://github.com/yuriiik/ISVImageScrollView", branch: "master"),
-        .package(url: "https://github.com/NiccoloBargioni/ZTronVideoPlayer", branch: "main")
+        .package(url: "https://github.com/NiccoloBargioni/ZTronVideoPlayer", branch: "main"),
+        .package(url: "https://github.com/NiccoloBargioni/ZTronObservation", branch: "bugfix/threadSafety"),
+        .package(url: "https://github.com/Juanpe/SkeletonView", branch: "main")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -25,7 +27,12 @@ let package = Package(
             dependencies: [
                 .product(name: "SnapKit", package: "SnapKit"),
                 .product(name: "ISVImageScrollView", package: "ISVImageScrollView"),
-                .product(name: "ZTronVideoPlayer", package: "ZTronVideoPlayer")
+                .product(name: "ZTronVideoPlayer", package: "ZTronVideoPlayer"),
+                .product(name: "ZTronObservation", package: "ZTronObservation"),
+                .product(name: "SkeletonView", package: "SkeletonView")
+            ],
+            resources: [
+                .process("Resources")
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency=complete")

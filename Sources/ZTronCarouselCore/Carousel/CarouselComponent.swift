@@ -1,19 +1,44 @@
 import UIKit
+import ZTronObservation
+import SkeletonView
 import os
 
 @MainActor
-public class CarouselComponent: UIPageViewController, Sendable {
+public class CarouselComponent: UIPageViewController, Sendable, Component {
+    public let id: String
+    
     private var medias: [any VisualMediaDescriptor]
     private let pageFactory: MediaFactory!
     
-    private var pageControls: UIPageControl!
+    private var pageControls: UIPageControl?
     private var lastSeenPageIndex: Int = -1
     
     private let makeVCLock = DispatchSemaphore(value: 1)
     private static let logger: os.Logger = .init(subsystem: "ZTronCarouselCore", category: "CarouselComponent")
+    private(set) public var lastAction: CarouselComponent.LastAction = .ready
+    
+    nonisolated lazy private var interactionsManager: (any MSAInteractionsManager)? = nil {
+        didSet {
+            guard let delegate = self.interactionsManager else { return }
+            delegate.setup(or: .replace)
+        }
+        
+        willSet {
+            guard let delegate = self.interactionsManager else { return }
+            delegate.detach(or: .ignore)
+        }
+    }
     
     public var currentPage: Int {
-        return self.pageControls.currentPage
+        return self.pageControls?.currentPage ?? 0
+    }
+    
+    public var currentMediaDescriptor: (any VisualMediaDescriptor)? {
+        if self.currentPage >= 0 && self.currentPage < self.medias.count {
+            return self.medias[self.currentPage]
+        } else {
+            return nil
+        }
     }
     
     public var numberOfPages: Int {
@@ -21,18 +46,23 @@ public class CarouselComponent: UIPageViewController, Sendable {
     }
     
     override public var dataSource: (any UIPageViewControllerDataSource)? {
-        willSet {
-            guard newValue != nil else { return }
-            
-            let firstVC = self.makeViewControllerFor(mediaIndex: 0)
-            self.setViewControllers([firstVC], direction: .forward, animated: false)
-        }
-        
         didSet {
             if dataSource == nil {
                 // TODO: Show skeleton
+                self.view.isSkeletonable = true
+                self.view.showAnimatedGradientSkeleton()
+                self.setViewControllers([self.makePlaceholder()], direction: .reverse, animated: false)
             } else {
                 // TODO: Hide skeleton
+                self.view.stopSkeletonAnimation()
+                self.view.hideSkeleton()
+                
+                if self.medias.count > 0 {
+                    let firstVC = self.makeViewControllerFor(mediaIndex: 0)
+                    self.setViewControllers([firstVC], direction: .forward, animated: false)
+                } else {
+                    self.setViewControllers([self.makePlaceholder()], direction: .reverse, animated: false)
+                }
             }
         }
     }
@@ -41,7 +71,9 @@ public class CarouselComponent: UIPageViewController, Sendable {
         with pageFactory: MediaFactory = BasicMediaFactory(),
         medias: [any VisualMediaDescriptor]
     ) {
+        self.id = "carousel"
         self.medias = medias
+        
         self.pageFactory = pageFactory
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
         
@@ -64,10 +96,16 @@ public class CarouselComponent: UIPageViewController, Sendable {
     override public func viewDidLoad() {
         super.viewDidLoad()
                         
+        if self.medias.count > 0 {
+            self.makePageControlsAndAddToSuperview()
+        }
+    }
+    
+    
+    private final func makePageControlsAndAddToSuperview() {
         let pageControls = UIPageControl()
         pageControls.numberOfPages = self.medias.count
         pageControls.addTarget(self, action: #selector(self.pageControlsChanged(_:)), for: .valueChanged)
-
         
         self.view.addSubview(pageControls)
         
@@ -78,7 +116,6 @@ public class CarouselComponent: UIPageViewController, Sendable {
         
         self.pageControls = pageControls
     }
-    
     
     private final func makeViewControllerFor(mediaIndex: Int) -> any CountedUIViewController {
         assert(mediaIndex >= 0 && mediaIndex < self.medias.count)
@@ -100,7 +137,18 @@ public class CarouselComponent: UIPageViewController, Sendable {
     }
     
     
-    private final func _replaceMedia(with other: any VisualMediaDescriptor, at index: Int) {
+    private final func makePlaceholder() -> any CountedUIViewController {
+        let newVC = BasicMediaFactory().makeImagePage(for: .init(assetName: "placeholder", in: .module))
+        newVC.pageIndex = 0
+        
+        Task(priority: .userInitiated) { @MainActor in
+            self.pageControls?.currentPage = 0
+        }
+        
+        return newVC
+    }
+    
+    private final func _replaceMedia(with other: any VisualMediaDescriptor, at index: Int, shouldReplaceViewController: Bool = true) {
         if index < 0 || index >= self.medias.count {
         #if DEBUG
             Self.logger.warning("Attempted to replace a media at index \(index) when the valid range is [0,\(self.medias.count))")
@@ -110,28 +158,40 @@ public class CarouselComponent: UIPageViewController, Sendable {
         
         self.medias[index] = other
         
-        if index == self.currentPage {
-            let newVC = self.makeViewControllerFor(mediaIndex: index)
-            self.viewControllers?.forEach { currentVC in
-                guard let currentVC = currentVC as? CountedUIViewController else { return }
-                currentVC.dismantle()
+        if shouldReplaceViewController {
+            if index == self.currentPage {
+                let newVC = self.makeViewControllerFor(mediaIndex: index)
+                self.viewControllers?.forEach { currentVC in
+                    guard let currentVC = currentVC as? CountedUIViewController else { return }
+                    currentVC.dismantle()
+                }
+                
+                self.setViewControllers([newVC], direction: .forward, animated: false)
+                self.lastAction = .replacedCurrentMedia
+                self.pushNotification()
             }
-            
-            self.setViewControllers([newVC], direction: .forward, animated: false)
+        } else {
+            self.lastAction = .replacedCurrentDescriptor
+            self.pushNotification()
         }
     }
     
-    public final func replaceMedia(with other: any VisualMediaDescriptor, at index: Int) {
-        self._replaceMedia(with: other, at: index)
+    public final func replaceMedia(with other: any VisualMediaDescriptor, at index: Int, shouldReplaceViewController: Bool = true) {
+        self._replaceMedia(with: other, at: index, shouldReplaceViewController: shouldReplaceViewController)
     }
     
     
     public final func replaceAllMedias(with other: [any VisualMediaDescriptor]) {
         assert(other.count > 0)
         
+        if self.medias.count <= 0 {
+            self.makePageControlsAndAddToSuperview()
+            self.view.layoutIfNeeded()
+        }
+        
         Task(priority: .userInitiated) { @MainActor in
-            self.pageControls.numberOfPages = other.count
-            self.pageControls.currentPage = 0
+            self.pageControls?.numberOfPages = other.count
+            self.pageControls?.currentPage = 0
         }
         
         self.medias = other
@@ -150,6 +210,26 @@ public class CarouselComponent: UIPageViewController, Sendable {
         )
         
         self.lastSeenPageIndex = 0
+        self.lastAction = .replacedAllMedias
+        self.pushNotification()
+    }
+    
+    nonisolated public func getDelegate() -> (any ZTronObservation.InteractionsManager)? {
+        return self.interactionsManager
+    }
+    
+    nonisolated public func setDelegate(_ interactionsManager: (any ZTronObservation.InteractionsManager)?) {
+        guard let interactionsManager = interactionsManager as? MSAInteractionsManager else {
+            if interactionsManager == nil {
+                self.interactionsManager = nil
+            } else {
+                fatalError("Expected interactionsManager of type \(String(describing: MSAInteractionsManager.self)) @ \(#function) in \(#file).")
+            }
+            
+            return
+        }
+        
+        self.interactionsManager = interactionsManager
     }
 }
 
@@ -197,21 +277,33 @@ extension CarouselComponent: UIPageViewControllerDataSource {
             direction: self.lastSeenPageIndex < newPageIndex ? .forward : .reverse,
             animated: true
         )
-        
+                
         self.lastSeenPageIndex = newPageIndex
+    }
+    
+    public enum LastAction: Sendable {
+        case ready
+        case replacedAllMedias
+        case replacedCurrentMedia
+        case replacedCurrentDescriptor
+        case pageChanged
     }
 }
 
 extension CarouselComponent: UIPageViewControllerDelegate {
     public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+        Task(priority: .userInitiated) { @MainActor in
+            self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+            
+            if self.viewControllers?.first !== previousViewControllers.first {
+                self.lastAction = .pageChanged
+                self.pushNotification()
+            }
+        }
+
         
         if let previousVisibleController = previousViewControllers.first as? CountedUIViewController {
-            if previousVisibleController.pageIndex != self.pageControls.currentPage {
-                // if page changed
-                Task(priority: .userInitiated) { @MainActor in
-                    self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
-                }
-
+            if previousVisibleController.pageIndex != self.pageControls?.currentPage {
                 previousViewControllers.forEach { controller in
                     guard let controller = (controller as? any CountedUIViewController) else { return }
                     controller.dismantle()
@@ -220,7 +312,11 @@ extension CarouselComponent: UIPageViewControllerDelegate {
         } else {
             // ViewControllers was empty
             Task(priority: .userInitiated) { @MainActor in
-                self.pageControls.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+                self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+                if self.viewControllers?.first !== previousViewControllers.first {
+                    self.lastAction = .pageChanged
+                    self.pushNotification()
+                }
             }
         }
     }
