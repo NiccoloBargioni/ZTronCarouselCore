@@ -260,7 +260,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         return newVC
     }
     
-    @MainActor @objc private func pageControlsChanged(_ sender: UIPageControl) {
+    @objc private func pageControlsChanged(_ sender: UIPageControl) {
         let newPageIndex = sender.currentPage
         // assert(newPageIndex >= 0 && newPageIndex <= self.medias.count)
         
