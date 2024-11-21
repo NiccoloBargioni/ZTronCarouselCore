@@ -277,10 +277,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
             direction: self.lastSeenPageIndex < newPageIndex ? .forward : .reverse,
             animated: true
         )
-        
-        self.lastAction = .pageChanged
-        self.pushNotification()
-        
+                
         self.lastSeenPageIndex = newPageIndex
     }
     
@@ -297,6 +294,11 @@ extension CarouselComponent: UIPageViewControllerDelegate {
     public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
         Task(priority: .userInitiated) { @MainActor in
             self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+            
+            if self.viewControllers?.first !== previousViewControllers.first {
+                self.lastAction = .pageChanged
+                self.pushNotification()
+            }
         }
 
         
@@ -311,6 +313,10 @@ extension CarouselComponent: UIPageViewControllerDelegate {
             // ViewControllers was empty
             Task(priority: .userInitiated) { @MainActor in
                 self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+                if self.viewControllers?.first !== previousViewControllers.first {
+                    self.lastAction = .pageChanged
+                    self.pushNotification()
+                }
             }
         }
     }
