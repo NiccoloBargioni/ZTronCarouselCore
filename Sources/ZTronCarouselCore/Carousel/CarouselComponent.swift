@@ -72,6 +72,12 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         self.medias = medias
         self.pageFactory = pageFactory
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+       
+        if self.medias.count <= 0 {
+            self.medias = [
+                ZTronImageDescriptor(assetName: "placeholder", in: .module)
+            ]
+        }
         
         self.delegate = self
         self.dataSource = self
@@ -162,7 +168,8 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     
     
     public final func replaceAllMedias(with other: [any VisualMediaDescriptor]) {
-        assert(other.count > 0)
+        let other = other.count > 0 ? other : [ZTronImageDescriptor(assetName: "placeholder", in: .module)]
+
         
         Task(priority: .userInitiated) { @MainActor in
             self.pageControls.numberOfPages = other.count

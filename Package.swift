@@ -31,6 +31,9 @@ let package = Package(
                 .product(name: "ZTronObservation", package: "ZTronObservation"),
                 .product(name: "SkeletonView", package: "SkeletonView")
             ],
+            resources: [
+                .process("Resources")
+            ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency=complete")
             ]
