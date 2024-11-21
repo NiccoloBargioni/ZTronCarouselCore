@@ -51,6 +51,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
                 // TODO: Show skeleton
                 self.view.isSkeletonable = true
                 self.view.showAnimatedGradientSkeleton()
+                self.setViewControllers([self.makePlaceholder()], direction: .reverse, animated: false)
             } else {
                 // TODO: Hide skeleton
                 self.view.stopSkeletonAnimation()
