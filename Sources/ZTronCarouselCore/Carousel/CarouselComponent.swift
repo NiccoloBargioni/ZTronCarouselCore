@@ -126,10 +126,8 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
             case .video:
                 newVC = self.pageFactory.makeVideoPage(for: self.medias[mediaIndex] as! ZTronVideoDescriptor)
             }
-            
-            guard let newVC = newVC else { fatalError("Unable to make page for media \(medias[mediaIndex])") }
         } else {
-            let newVC = BasicMediaFactory().makeImagePage(for: self.medias[0] as! ZTronImageDescriptor)
+            newVC = BasicMediaFactory().makeImagePage(for: self.medias[0] as! ZTronImageDescriptor)
         }
         
         newVC?.pageIndex = mediaIndex
