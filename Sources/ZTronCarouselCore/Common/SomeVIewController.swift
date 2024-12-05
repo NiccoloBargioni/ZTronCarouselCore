@@ -1,11 +1,13 @@
 import UIKit
 
-public final class CustomView: UIView {
+public final class IOS15LayoutLimitingView: UIView {
     internal var shouldLayout: Bool = true
     
     override public func layoutSubviews() {
-        guard shouldLayout else { return }
-        
+        if #unavailable(iOS 16) {
+            guard shouldLayout else { return }
+        }
+            
         super.layoutSubviews()
     }
 }
@@ -20,7 +22,7 @@ open class SomeViewController: UIViewController, CountedUIViewController {
     
     
     override public func loadView() {
-        view = CustomView(frame: .init(x: 0, y: 0, width: 400, height: 700))
+        view = IOS15LayoutLimitingView(frame: .init(x: 0, y: 0, width: 400, height: 700))
     
         
         view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -30,14 +32,14 @@ open class SomeViewController: UIViewController, CountedUIViewController {
         super.viewWillTransition(to: size, with: coordinator)
         
         self.view.layoutSubviews()
-        if let view = self.view as? CustomView {
+        if let view = self.view as? IOS15LayoutLimitingView {
             view.shouldLayout = false
         }
         
     }
     
     public final func onRotationCompletion() {
-        if let view = self.view as? CustomView {
+        if let view = self.view as? IOS15LayoutLimitingView {
             view.shouldLayout = true
         }
 
