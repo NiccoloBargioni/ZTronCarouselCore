@@ -3,9 +3,7 @@ import SnapKit
 import ISVImageScrollView
 
 
-open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIViewController, Sendable {
-    public var pageIndex: Int = 0
-    
+open class BasicImagePage: SomeViewController, UIScrollViewDelegate, Sendable {
     public let imageView: UIImageView!
     
     public let scrollView: ISVImageScrollView = {
@@ -48,9 +46,5 @@ open class BasicImagePage: UIViewController, UIScrollViewDelegate, CountedUIView
     
     public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return self.imageView
-    }
-    
-    open func dismantle() {
-        
     }
 }
