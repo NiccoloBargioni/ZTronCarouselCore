@@ -47,4 +47,15 @@ open class BasicImagePage: SomeViewController, UIScrollViewDelegate, Sendable {
     public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return self.imageView
     }
+    
+    override open func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        coordinator.animate { _ in
+
+        } completion: { _ in
+            super.onRotationCompletion()
+        }
+    }
+
 }
