@@ -3,7 +3,7 @@ import SnapKit
 import ISVImageScrollView
 
 
-open class BasicImagePage: SomeViewController, UIScrollViewDelegate, Sendable {
+open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelegate, Sendable {
     public let imageView: UIImageView!
     
     public let scrollView: ISVImageScrollView = {
