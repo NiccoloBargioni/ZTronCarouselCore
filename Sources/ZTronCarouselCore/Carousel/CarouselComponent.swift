@@ -17,17 +17,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     private static let logger: os.Logger = .init(subsystem: "ZTronCarouselCore", category: "CarouselComponent")
     private(set) public var lastAction: CarouselComponent.LastAction = .ready
     
-    nonisolated lazy private var interactionsManager: (any MSAInteractionsManager)? = nil {
-        didSet {
-            guard let delegate = self.interactionsManager else { return }
-            delegate.setup(or: .replace)
-        }
-        
-        willSet {
-            guard let delegate = self.interactionsManager else { return }
-            delegate.detach(or: .ignore)
-        }
-    }
+    nonisolated lazy private var interactionsManager: (any MSAInteractionsManager)? = nil
     
     public var currentPage: Int {
         return self.pageControls?.currentPage ?? 0
@@ -181,8 +171,13 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     }
     
     
-    public final func replaceAllMedias(with other: [any VisualMediaDescriptor]) {
+    public final func replaceAllMedias(
+        with other: [any VisualMediaDescriptor],
+        present imageAtIndex: Int = 0,
+        animated: Bool = false
+    ) {
         assert(other.count > 0)
+        assert(imageAtIndex > 0 && imageAtIndex < other.count)
         
         if self.medias.count <= 0 {
             self.makePageControlsAndAddToSuperview()
@@ -191,12 +186,12 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         Task(priority: .userInitiated) { @MainActor in
             self.pageControls?.numberOfPages = other.count
-            self.pageControls?.currentPage = 0
+            self.pageControls?.currentPage = imageAtIndex
         }
         
         self.medias = other
         
-        let newVC = self.makeViewControllerFor(mediaIndex: 0)
+        let newVC = self.makeViewControllerFor(mediaIndex: imageAtIndex)
         
         self.viewControllers?.forEach { currentVC in
             guard let currentVC = currentVC as? CountedUIViewController else { return }
@@ -205,11 +200,11 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         self.setViewControllers(
             [newVC],
-            direction: self.lastSeenPageIndex > 0 ? .reverse : .forward,
-            animated: self.lastSeenPageIndex > 0
+            direction: self.lastSeenPageIndex > imageAtIndex ? .reverse : .forward,
+            animated: animated
         )
         
-        self.lastSeenPageIndex = 0
+        self.lastSeenPageIndex = imageAtIndex
         self.lastAction = .replacedAllMedias
         self.pushNotification()
     }

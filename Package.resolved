@@ -1,5 +1,5 @@
 {
-  "originHash" : "9036842ca3bc8a1c43072c3691d4e0c6f4e5a6ae0902042bef56de5d87737e90",
+  "originHash" : "1c7e022b7efd68f64f25af227245b4f064df3542f44f7e339846831a47483200",
   "pins" : [
     {
       "identity" : "isvimagescrollview",
@@ -43,7 +43,7 @@
       "location" : "https://github.com/NiccoloBargioni/ZTronObservation",
       "state" : {
         "branch" : "bugfix/threadSafety",
-        "revision" : "95518efa06fec65718f78d3f920fcc0e692d7a2f"
+        "revision" : "58086882c42955060edc522f2e70369dd47dc0af"
       }
     },
     {
