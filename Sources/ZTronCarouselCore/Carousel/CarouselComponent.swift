@@ -177,7 +177,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         animated: Bool = false
     ) {
         assert(other.count > 0)
-        assert(imageAtIndex > 0 && imageAtIndex < other.count)
+        assert(imageAtIndex >= 0 && imageAtIndex < other.count)
         
         if self.medias.count <= 0 {
             self.makePageControlsAndAddToSuperview()
