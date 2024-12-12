@@ -14,6 +14,8 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     private var lastSeenPageIndex: Int = -1
     
     private let makeVCLock = DispatchSemaphore(value: 1)
+    private let delegateLock = DispatchSemaphore(value: 1)
+    
     private static let logger: os.Logger = .init(subsystem: "ZTronCarouselCore", category: "CarouselComponent")
     private(set) public var lastAction: CarouselComponent.LastAction = .ready
     
@@ -168,11 +170,15 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
                 
                 self.setViewControllers([newVC], direction: .forward, animated: false)
                 self.lastAction = .replacedCurrentMedia
+                self.delegateLock.wait()
                 self.pushNotification()
+                self.delegateLock.signal()
             }
         } else {
             self.lastAction = .replacedCurrentDescriptor
+            self.delegateLock.wait()
             self.pushNotification()
+            self.delegateLock.signal()
         }
     }
     
@@ -216,7 +222,9 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         self.lastSeenPageIndex = imageAtIndex
         self.lastAction = .replacedAllMedias
+        self.delegateLock.wait()
         self.pushNotification()
+        self.delegateLock.signal()
     }
     
     nonisolated public func getDelegate() -> (any ZTronObservation.InteractionsManager)? {
@@ -284,6 +292,11 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         )
                 
         self.lastSeenPageIndex = newPageIndex
+        
+        self.lastAction = .pageChanged
+        self.delegateLock.wait()
+        self.pushNotification()
+        self.delegateLock.signal()
     }
     
     public enum LastAction: Sendable {
@@ -296,14 +309,15 @@ extension CarouselComponent: UIPageViewControllerDataSource {
 }
 
 extension CarouselComponent: UIPageViewControllerDelegate {
-    public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        Task(priority: .userInitiated) { @MainActor in
-            self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
-            
-            if self.viewControllers?.first !== previousViewControllers.first {
-                self.lastAction = .pageChanged
-                self.pushNotification()
-            }
+    @MainActor public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+        
+        self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+        
+        if self.viewControllers?.first !== previousViewControllers.first {
+            self.lastAction = .pageChanged
+            self.delegateLock.wait()
+            self.pushNotification()
+            self.delegateLock.signal()
         }
 
         
@@ -316,12 +330,12 @@ extension CarouselComponent: UIPageViewControllerDelegate {
             }
         } else {
             // ViewControllers was empty
-            Task(priority: .userInitiated) { @MainActor in
-                self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
-                if self.viewControllers?.first !== previousViewControllers.first {
-                    self.lastAction = .pageChanged
-                    self.pushNotification()
-                }
+            self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
+            if self.viewControllers?.first !== previousViewControllers.first {
+                self.lastAction = .pageChanged
+                self.delegateLock.wait()
+                self.pushNotification()
+                self.delegateLock.signal()
             }
         }
     }
