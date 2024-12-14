@@ -181,13 +181,13 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
                 self.setViewControllers([newVC], direction: .forward, animated: false)
                 self.lastAction = .replacedCurrentMedia
                 self.delegateLock.wait()
-                self.pushNotification()
+                self.interactionsManager?.pushNotification(eventArgs: .init(source: self))
                 self.delegateLock.signal()
             }
         } else {
             self.lastAction = .replacedCurrentDescriptor
             self.delegateLock.wait()
-            self.pushNotification()
+            self.interactionsManager?.pushNotification(eventArgs: .init(source: self))
             self.delegateLock.signal()
         }
     }
@@ -305,7 +305,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         
         self.lastAction = .pageChanged
         self.delegateLock.wait()
-        self.pushNotification()
+        self.interactionsManager?.pushNotification(eventArgs: .init(source: self))
         self.delegateLock.signal()
     }
     
@@ -326,7 +326,7 @@ extension CarouselComponent: UIPageViewControllerDelegate {
         if self.viewControllers?.first !== previousViewControllers.first {
             self.lastAction = .pageChanged
             self.delegateLock.wait()
-            self.pushNotification()
+            self.interactionsManager?.pushNotification(eventArgs: .init(source: self))
             self.delegateLock.signal()
         }
 
@@ -344,7 +344,7 @@ extension CarouselComponent: UIPageViewControllerDelegate {
             if self.viewControllers?.first !== previousViewControllers.first {
                 self.lastAction = .pageChanged
                 self.delegateLock.wait()
-                self.pushNotification()
+                self.interactionsManager?.pushNotification(eventArgs: .init(source: self))
                 self.delegateLock.signal()
             }
         }
