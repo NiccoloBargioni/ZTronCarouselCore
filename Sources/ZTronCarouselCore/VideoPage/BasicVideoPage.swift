@@ -9,6 +9,7 @@ import ZTronVideoPlayer
 // FIXME: Probably seeking needs better accuracy?
 // FIXME: Automatically pause the overlay when the app fades to background
 public class BasicVideoPage: UIViewController, CountedUIVideoPageController {
+    private(set) public var assetDescriptor: (any VisualMediaDescriptor)?
     
     private final let uiOverlayColor: UIColor = UIColor(cgColor: CGColor(red: 0, green: 0, blue: 0, alpha: 0.4))
     
@@ -61,6 +62,8 @@ public class BasicVideoPage: UIViewController, CountedUIVideoPageController {
         
         
         videoOverlayView.delegate = self
+        
+        self.assetDescriptor = videoDescriptor
     }
     
     required override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {

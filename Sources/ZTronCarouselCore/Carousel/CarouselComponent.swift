@@ -43,6 +43,16 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         }
     }
     
+    public var currentVisibleMediaDescriptor: (any VisualMediaDescriptor)? {
+        if let pageController = self.viewControllers?.first as? CountedUIViewController {
+            if let descriptor = pageController.assetDescriptor {
+                return descriptor
+            }
+        }
+        
+        return self.currentMediaDescriptor
+    }
+    
     public var numberOfPages: Int {
         return self.medias.count
     }

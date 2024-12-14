@@ -38,6 +38,7 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelega
             make.left.top.right.bottom.equalToSuperview()
         }
 
+        super.assetDescriptor = imageDescriptor
     }
         
     required public init?(coder: NSCoder) {

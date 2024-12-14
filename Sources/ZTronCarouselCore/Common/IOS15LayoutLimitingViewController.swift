@@ -19,6 +19,7 @@ public final class IOS15LayoutLimitingView: UIView {
 
 open class IOS15LayoutLimitingViewController: UIViewController, CountedUIViewController {
     public var pageIndex: Int = .zero
+    internal(set) public var assetDescriptor: (any VisualMediaDescriptor)? = nil
     
     public func dismantle() {
         
