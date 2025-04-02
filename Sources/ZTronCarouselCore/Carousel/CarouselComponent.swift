@@ -254,6 +254,19 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         self.interactionsManager = interactionsManager
     }
+    
+    public final func turnPage(to: Int) {
+        assert(to >= 0 && to < self.medias.count)
+        
+        let newVC = self.makeViewControllerFor(mediaIndex: to)
+        self.setViewControllers(
+            [newVC],
+            direction: to > self.currentPage ? UIPageViewController.NavigationDirection.forward : UIPageViewController.NavigationDirection.reverse,
+            animated: to != self.currentPage,
+            completion: nil
+        )
+    }
+
 }
 
 extension CarouselComponent: UIPageViewControllerDataSource {
@@ -270,7 +283,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         
         return newVC
     }
-    
+
     public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
 
         guard let vc = viewController as? (any CountedUIViewController) else { return nil }
@@ -309,6 +322,7 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         self.delegateLock.signal()
     }
     
+
     public enum LastAction: Sendable {
         case ready
         case replacedAllMedias
