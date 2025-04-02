@@ -159,6 +159,16 @@ public class BasicVideoPage: UIViewController, CountedUIVideoPageController {
         self.currentSkipArrowsSide = side
     }
     
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        print("\(#function)")
+    }
+    
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        print("\(#function)")
+    }
+    
     public func dismantle() {
         if self.videoOverlayView.isPlaying {
             self.videoPlayer.pause()
