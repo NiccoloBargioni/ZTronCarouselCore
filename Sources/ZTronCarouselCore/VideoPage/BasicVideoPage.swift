@@ -164,10 +164,11 @@ public class BasicVideoPage: UIViewController, CountedUIVideoPageController {
         print("\(#function)")
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+    public override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         print("\(#function)")
     }
+    
     
     public func dismantle() {
         if self.videoOverlayView.isPlaying {
