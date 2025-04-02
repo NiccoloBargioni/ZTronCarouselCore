@@ -166,7 +166,7 @@ public class BasicVideoPage: UIViewController, CountedUIVideoPageController {
     
     public override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        print("\(#function)")
+        self.dismantle()
     }
     
     
