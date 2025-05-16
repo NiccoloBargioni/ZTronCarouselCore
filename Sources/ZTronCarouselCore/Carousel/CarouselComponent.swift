@@ -19,7 +19,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     private static let logger: os.Logger = .init(subsystem: "ZTronCarouselCore", category: "CarouselComponent")
     private(set) public var lastAction: CarouselComponent.LastAction = .ready
     
-    nonisolated lazy private var interactionsManager: (any MSAInteractionsManager)? = nil {
+    nonisolated(unsafe) private var interactionsManager: (any MSAInteractionsManager)? = nil {
         didSet {
             guard let interactionsManager = self.interactionsManager else { return }
             interactionsManager.setup(or: .replace)
