@@ -259,16 +259,19 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         guard self.medias.count > 0 else { return }
         assert(to >= 0 && to < self.medias.count)
         
-        let newVC = self.makeViewControllerFor(mediaIndex: to)
-        
-        self.setViewControllers(
-            [newVC],
-            direction: to > self.currentPage ? UIPageViewController.NavigationDirection.forward : UIPageViewController.NavigationDirection.reverse,
-            animated: to != self.currentPage,
-            completion: nil
-        )
-        
-        self.pageControls?.currentPage = to
+        if let pageControls = self.pageControls {
+            self.pageControls?.currentPage = to
+            self.view.superview?.layoutIfNeeded()
+        } else {
+            let newVC = self.makeViewControllerFor(mediaIndex: to)
+            
+            self.setViewControllers(
+                [newVC],
+                direction: to > self.currentPage ? UIPageViewController.NavigationDirection.forward : UIPageViewController.NavigationDirection.reverse,
+                animated: to != self.currentPage,
+                completion: nil
+            )
+        }
     }
 
 }
