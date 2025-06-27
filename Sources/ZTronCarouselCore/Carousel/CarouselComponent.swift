@@ -261,7 +261,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         if let pageControls = self.pageControls {
             self.pageControls?.currentPage = to
-            self.view.superview?.layoutIfNeeded()
+            self.pageControlsChanged(pageControls)
         } else {
             let newVC = self.makeViewControllerFor(mediaIndex: to)
             
