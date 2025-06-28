@@ -17,7 +17,17 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     private let delegateLock = DispatchSemaphore(value: 1)
     
     private static let logger: os.Logger = .init(subsystem: "ZTronCarouselCore", category: "CarouselComponent")
-    private(set) public var lastAction: CarouselComponent.LastAction = .ready
+    private(set) public var lastAction: CarouselComponent.LastAction = .ready {
+        didSet {
+            guard let imageName = self.currentVisibleMediaDescriptor?.getAssetName() else { return }
+            
+            if self.lastAction != .ready {
+                self.onPageChangedAction?(imageName, currentPage)
+            }
+        }
+    }
+    
+    private var onPageChangedAction: ((String, Int) -> Void)?
     
     nonisolated(unsafe) private var interactionsManager: (any MSAInteractionsManager)? = nil {
         didSet {
@@ -81,10 +91,12 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     
     public init(
         with pageFactory: MediaFactory = BasicMediaFactory(),
-        medias: [any VisualMediaDescriptor]
+        medias: [any VisualMediaDescriptor],
+        onPageChanged: ((String, Int) -> Void)? = nil
     ) {
         self.id = "carousel"
         self.medias = medias
+        self.onPageChangedAction = onPageChanged
         
         self.pageFactory = pageFactory
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)

@@ -5,7 +5,6 @@ import SnapKit
     private let pageFactory: any MediaFactory
     private let medias: [any VisualMediaDescriptor]
     
-    
     // this will hold the page view controller
     private let myContainerView: UIView = {
         let v = UIView()
@@ -28,11 +27,12 @@ import SnapKit
     
     public init(
         with pageFactory: any MediaFactory = BasicMediaFactory(),
-        medias: [any VisualMediaDescriptor]
+        medias: [any VisualMediaDescriptor],
+        onPageChanged: ((String, Int) -> Void)? = nil
     ) {
         self.medias = medias
         self.pageFactory = pageFactory
-        self.thePageVC = .init(with: pageFactory, medias: medias)
+        self.thePageVC = .init(with: pageFactory, medias: medias, onPageChanged: onPageChanged)
         
         super.init(nibName: nil, bundle: nil)
     }
