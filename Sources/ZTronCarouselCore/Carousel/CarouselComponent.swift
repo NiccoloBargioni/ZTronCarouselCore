@@ -101,6 +101,10 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         self.pageFactory = pageFactory
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
         
+        if let firstMedia = self.medias.first {
+            self.onPageChangedAction?(firstMedia.getAssetName(), 0)
+        }
+        
         self.delegate = self
         self.dataSource = self
     }
