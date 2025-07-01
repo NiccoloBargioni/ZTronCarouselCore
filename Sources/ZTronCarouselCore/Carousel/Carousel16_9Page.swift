@@ -43,10 +43,7 @@ import SnapKit
     
     override public func viewDidLoad() {
         super.viewDidLoad()
-        
-        // so we can see the view / page view controller framing
-        view.backgroundColor = .systemBackground
-        
+                
         // add myContainerView
         myContainerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(myContainerView)

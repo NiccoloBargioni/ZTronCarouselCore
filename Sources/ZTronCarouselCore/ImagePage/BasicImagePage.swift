@@ -32,7 +32,6 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelega
 
         scrollView.imageView = imageView
         self.view.addSubview(scrollView)
-        self.view.backgroundColor = UIColor.black
 
         self.scrollView.snp.makeConstraints { make in
             make.left.top.right.bottom.equalToSuperview()
