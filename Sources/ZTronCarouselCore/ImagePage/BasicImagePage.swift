@@ -18,11 +18,12 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelega
         return scrollView
     }()
         
+    private static let supportedImageFormats: [String] = ["png", "jpg", "jpeg", "heic"]
 
     public init(imageDescriptor: ZTronImageDescriptor) {
-        print(#function)
-                
-        let image = UIImage(named: imageDescriptor.getAssetName(), in: imageDescriptor.getBundle(), with: nil)!
+        guard let image = Self.attemptFetchingImage(imageDescriptor) else {
+            fatalError("Unable to fetch image \(imageDescriptor.getAssetName()) in \(String(describing: imageDescriptor.getBundle())). Make sure the image either exists in assets catalog or bundle resources with .png/.jpg/.jpeg/.heic format.")
+        }
         let imageView = UIImageView(image: image)
 
         self.imageView = imageView
@@ -58,4 +59,17 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelega
         }
     }
 
+    
+    private static func attemptFetchingImage(_ descriptor: ZTronImageDescriptor) -> UIImage? {
+        if let imageInAssetsCatalog = UIImage(named: descriptor.getAssetName(), in: descriptor.getBundle(), with: nil) {
+            return imageInAssetsCatalog
+        } else {
+            for format in Self.supportedImageFormats {
+                if let imageWithFormatInBundle = UIImage(named: descriptor.getAssetName().appending(".".appending(format)), in: descriptor.getBundle(), with: nil) {
+                    return imageWithFormatInBundle
+                }
+            }
+            return nil
+        }
+    }
 }
