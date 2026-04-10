@@ -82,6 +82,10 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
                 if self.medias.count > 0 {
                     let firstVC = self.makeViewControllerFor(mediaIndex: 0)
                     self.setViewControllers([firstVC], direction: .forward, animated: false)
+                    
+                    if let firstVC = (firstVC as? BasicImagePage) {
+                        self.configureZoomHandling(for: firstVC)
+                    }
                 } else {
                     self.setViewControllers([self.makePlaceholder()], direction: .reverse, animated: false)
                 }
@@ -237,6 +241,11 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         
         self.viewControllers?.forEach { currentVC in
             guard let currentVC = currentVC as? CountedUIViewController else { return }
+            
+            if let currentVC = (currentVC as? BasicImagePage) {
+                self.removeZoomHandling(for: currentVC)
+            }
+            
             currentVC.dismantle()
         }
         
