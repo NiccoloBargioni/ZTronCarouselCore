@@ -364,9 +364,7 @@ extension CarouselComponent: UIPageViewControllerDelegate {
         
         if self.viewControllers?.first !== previousViewControllers.first {
             if let currentPage = self.viewControllers?.first as? BasicImagePage {
-                currentPage.onZoomStateChanged = { [weak self] isZoomed in
-                    self?.dataSource = !isZoomed ? self : nil
-                }
+                pageViewController.configureZoomHandling(for: currentPage)
             }
             
             self.lastAction = .pageChanged
@@ -378,7 +376,11 @@ extension CarouselComponent: UIPageViewControllerDelegate {
         
         if let previousVisibleController = previousViewControllers.first as? CountedUIViewController {
             if previousVisibleController.pageIndex != self.pageControls?.currentPage {
-                previousViewControllers.forEach { controller in                    
+                previousViewControllers.forEach { controller in
+                    if let controller = (controller as? BasicImagePage) {
+                        pageViewController.removeZoomHandling(for: controller)
+                    }
+                    
                     guard let controller = (controller as? any CountedUIViewController) else { return }
                     controller.dismantle()
                 }

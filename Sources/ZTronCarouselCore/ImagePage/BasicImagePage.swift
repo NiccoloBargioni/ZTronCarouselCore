@@ -18,7 +18,7 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, Sendable {
         return scrollView
     }()
         
-    private static let supportedImageFormats: [String] = [ "heic", "png", "jpg", "jpeg"]
+    private static let supportedImageFormats: [String] = ["heic", "png", "jpg", "jpeg"]
     private var isCurrentlyZoomed: Bool = false
     public var onZoomStateChanged: ((Bool) -> Void)?
 
