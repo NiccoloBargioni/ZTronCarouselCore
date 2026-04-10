@@ -3,7 +3,7 @@ import SnapKit
 import ISVImageScrollView
 
 
-open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelegate, Sendable {
+open class BasicImagePage: IOS15LayoutLimitingViewController, Sendable {
     public let imageView: UIImageView!
     
     public let scrollView: ISVImageScrollView = {
@@ -18,7 +18,10 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelega
         return scrollView
     }()
         
-    private static let supportedImageFormats: [String] = ["png", "jpg", "jpeg", "heic"]
+    private static let supportedImageFormats: [String] = [ "heic", "png", "jpg", "jpeg"]
+    private var isCurrentlyZoomed: Bool = false
+    public var onZoomStateChanged: ((Bool) -> Void)?
+
 
     public init(imageDescriptor: ZTronImageDescriptor) {
         guard let image = Self.attemptFetchingImage(imageDescriptor) else {
@@ -29,7 +32,7 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelega
         self.imageView = imageView
 
         super.init(nibName: nil, bundle: nil)
-        scrollView.delegate = self
+        self.scrollView.delegate = self
 
         scrollView.imageView = imageView
         self.view.addSubview(scrollView)
@@ -44,11 +47,7 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelega
     required public init?(coder: NSCoder) {
         fatalError("Cannot init from storyboard")
     }
-    
-    public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
-        return self.imageView
-    }
-    
+
     override open func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         
@@ -71,5 +70,30 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, UIScrollViewDelega
             }
             return nil
         }
+    }
+}
+
+
+extension BasicImagePage: UIScrollViewDelegate {
+    public func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        let isZoomed = scrollView.zoomScale > 1.0
+        if isZoomed != self.isCurrentlyZoomed {
+            self.isCurrentlyZoomed = isZoomed
+            self.onZoomStateChanged?(isZoomed)
+        }
+    }
+    
+    
+    public func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+        let isZoomed = scrollView.zoomScale > 1.0
+        if isZoomed != self.isCurrentlyZoomed {
+            self.isCurrentlyZoomed = isZoomed
+            self.onZoomStateChanged?(isZoomed)
+        }
+    }
+    
+    
+    public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+        return self.imageView
     }
 }
