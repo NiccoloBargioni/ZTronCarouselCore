@@ -75,7 +75,7 @@ open class BasicImagePage: IOS15LayoutLimitingViewController, Sendable {
 
 
 extension BasicImagePage: UIScrollViewDelegate {
-    public func scrollViewDidZoom(_ scrollView: UIScrollView) {
+    open func scrollViewDidZoom(_ scrollView: UIScrollView) {
         let isZoomed = scrollView.zoomScale > 1.0
         if isZoomed != self.isCurrentlyZoomed {
             self.isCurrentlyZoomed = isZoomed
@@ -84,7 +84,7 @@ extension BasicImagePage: UIScrollViewDelegate {
     }
     
     
-    public func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+    open func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
         let isZoomed = scrollView.zoomScale > 1.0
         if isZoomed != self.isCurrentlyZoomed {
             self.isCurrentlyZoomed = isZoomed

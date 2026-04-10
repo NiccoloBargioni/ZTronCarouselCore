@@ -378,11 +378,7 @@ extension CarouselComponent: UIPageViewControllerDelegate {
         
         if let previousVisibleController = previousViewControllers.first as? CountedUIViewController {
             if previousVisibleController.pageIndex != self.pageControls?.currentPage {
-                previousViewControllers.forEach { controller in
-                    if let controller = (controller as? BasicImagePage) {
-                        pageViewController.removeZoomHandling(for: controller)
-                    }
-                    
+                previousViewControllers.forEach { controller in                    
                     guard let controller = (controller as? any CountedUIViewController) else { return }
                     controller.dismantle()
                 }
