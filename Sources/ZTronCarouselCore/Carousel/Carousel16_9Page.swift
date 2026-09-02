@@ -1,19 +1,39 @@
 import UIKit
 import SnapKit
 
-@MainActor public final class Carousel16_9Page: UIViewController {
+@MainActor open class Carousel16_9Page: UIViewController {
     private let pageFactory: any MediaFactory
     private let medias: [any VisualMediaDescriptor]
-    
+
     // this will hold the page view controller
     private let myContainerView: UIView = {
         let v = UIView()
         v.backgroundColor = .black
         return v
     }()
-    
+
     // we will add a UIPageViewController as a child VC
     private var thePageVC: CarouselComponent!
+
+    // Bridges open style overrides from Carousel16_9Page into the wrapped CarouselComponent.
+    private final class ForwardingCarouselComponent: CarouselComponent {
+        weak var styleDelegate: Carousel16_9Page?
+
+        override func indicatorStyle(forCurrentPage page: Int, totalPages: Int) -> PageIndicatorStyle {
+            styleDelegate?.indicatorStyle(forCurrentPage: page, totalPages: totalPages)
+                ?? super.indicatorStyle(forCurrentPage: page, totalPages: totalPages)
+        }
+
+        override func indicatorStyle(forPageBefore page: Int, currentPage: Int, totalPages: Int) -> PageIndicatorStyle {
+            styleDelegate?.indicatorStyle(forPageBefore: page, currentPage: currentPage, totalPages: totalPages)
+                ?? super.indicatorStyle(forPageBefore: page, currentPage: currentPage, totalPages: totalPages)
+        }
+
+        override func indicatorStyle(forPageAfter page: Int, currentPage: Int, totalPages: Int) -> PageIndicatorStyle {
+            styleDelegate?.indicatorStyle(forPageAfter: page, currentPage: currentPage, totalPages: totalPages)
+                ?? super.indicatorStyle(forPageAfter: page, currentPage: currentPage, totalPages: totalPages)
+        }
+    }
     
     // this will be used to change the page view controller height based on
     //    view width-to-height (portrait/landscape)
@@ -32,12 +52,15 @@ import SnapKit
     ) {
         self.medias = medias
         self.pageFactory = pageFactory
-        self.thePageVC = .init(with: pageFactory, medias: medias, onPageChanged: onPageChanged)
-        
+        let carousel = ForwardingCarouselComponent(with: pageFactory, medias: medias, onPageChanged: onPageChanged)
+        self.thePageVC = carousel
+
         super.init(nibName: nil, bundle: nil)
+
+        carousel.styleDelegate = self
     }
     
-    required internal init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
@@ -106,6 +129,10 @@ import SnapKit
         return CGSize.sizeThatFits(containerSize: self.view.safeAreaLayoutGuide.layoutFrame.size, containedAR: 16.0/9.0)
     }
     
+    open func indicatorStyle(forCurrentPage page: Int, totalPages: Int) -> PageIndicatorStyle { .default }
+    open func indicatorStyle(forPageBefore page: Int, currentPage: Int, totalPages: Int) -> PageIndicatorStyle { .default }
+    open func indicatorStyle(forPageAfter page: Int, currentPage: Int, totalPages: Int) -> PageIndicatorStyle { .default }
+
     override public func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         

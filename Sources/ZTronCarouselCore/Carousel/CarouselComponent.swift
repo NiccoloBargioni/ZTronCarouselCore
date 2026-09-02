@@ -3,8 +3,41 @@ import ZTronObservation
 import SkeletonView
 import os
 
+/// Style descriptor for a single page indicator dot.
+///
+/// - If both `image` and `tintColor` are `nil` the system default dot is used.
+/// - If only `tintColor` is set, a filled circle of that colour is generated.
+/// - If only `image` is set, the image is used as-is.
+/// - If both are set, the image is tinted with `tintColor`.
+public struct PageIndicatorStyle: Sendable {
+    public let image: UIImage?
+    public let tintColor: UIColor?
+
+    public static let `default` = PageIndicatorStyle()
+
+    public init(image: UIImage? = nil, tintColor: UIColor? = nil) {
+        self.image = image
+        self.tintColor = tintColor
+    }
+}
+
+fileprivate extension PageIndicatorStyle {
+    func resolvedImage() -> UIImage? {
+        if let image {
+            return tintColor.map { image.withTintColor($0, renderingMode: .alwaysOriginal) } ?? image
+        } else if let tintColor {
+            let size = CGSize(width: 8, height: 8)
+            return UIGraphicsImageRenderer(size: size).image { ctx in
+                tintColor.setFill()
+                ctx.cgContext.fillEllipse(in: CGRect(origin: .zero, size: size))
+            }
+        }
+        return nil
+    }
+}
+
 @MainActor
-public class CarouselComponent: UIPageViewController, Sendable, Component {
+open class CarouselComponent: UIPageViewController, Sendable, Component {
     public let id: String
     
     private var medias: [any VisualMediaDescriptor]
@@ -121,7 +154,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         fatalError("This initialiser is unavailable for objects of type \(String(describing: Self.self))")
     }
     
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         return nil
     }
     
@@ -138,15 +171,16 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         let pageControls = UIPageControl()
         pageControls.numberOfPages = self.medias.count
         pageControls.addTarget(self, action: #selector(self.pageControlsChanged(_:)), for: .valueChanged)
-        
+
         self.view.addSubview(pageControls)
-        
+
         pageControls.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.bottom.equalToSuperview().inset(10)
         }
-        
+
         self.pageControls = pageControls
+        self.applyIndicatorStyles()
     }
     
     private final func makeViewControllerFor(mediaIndex: Int) -> any CountedUIViewController {
@@ -233,6 +267,7 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
         Task(priority: .userInitiated) { @MainActor in
             self.pageControls?.numberOfPages = other.count
             self.pageControls?.currentPage = imageAtIndex
+            self.applyIndicatorStyles()
         }
         
         self.medias = other
@@ -283,19 +318,56 @@ public class CarouselComponent: UIPageViewController, Sendable, Component {
     public final func turnPage(to: Int) {
         guard self.medias.count > 0 else { return }
         assert(to >= 0 && to < self.medias.count)
-        
+
         if let pageControls = self.pageControls {
             self.pageControls?.currentPage = to
             self.pageControlsChanged(pageControls)
         } else {
             let newVC = self.makeViewControllerFor(mediaIndex: to)
-            
+
             self.setViewControllers(
                 [newVC],
                 direction: to > self.currentPage ? UIPageViewController.NavigationDirection.forward : UIPageViewController.NavigationDirection.reverse,
                 animated: to != self.currentPage,
                 completion: nil
             )
+        }
+    }
+
+    // MARK: - Paging indicator style overrides
+
+    /// Return the style for the indicator dot of the current page.
+    open func indicatorStyle(forCurrentPage page: Int, totalPages: Int) -> PageIndicatorStyle { .default }
+
+    /// Return the style for an indicator dot whose page index is *before* the current page.
+    open func indicatorStyle(forPageBefore page: Int, currentPage: Int, totalPages: Int) -> PageIndicatorStyle { .default }
+
+    /// Return the style for an indicator dot whose page index is *after* the current page.
+    open func indicatorStyle(forPageAfter page: Int, currentPage: Int, totalPages: Int) -> PageIndicatorStyle { .default }
+
+    private func applyIndicatorStyles() {
+        guard let pageControls = self.pageControls else { return }
+        let current = pageControls.currentPage
+        let total = pageControls.numberOfPages
+
+        for i in 0..<total {
+            let style: PageIndicatorStyle
+            if i < current {
+                style = indicatorStyle(forPageBefore: i, currentPage: current, totalPages: total)
+            } else if i == current {
+                style = indicatorStyle(forCurrentPage: i, totalPages: total)
+            } else {
+                style = indicatorStyle(forPageAfter: i, currentPage: current, totalPages: total)
+            }
+
+            let image = style.resolvedImage()
+            if i == current {
+                if #available(iOS 16.0, *) {
+                    pageControls.setCurrentPageIndicatorImage(image, forPage: i)
+                }
+            } else {
+                pageControls.setIndicatorImage(image, forPage: i)
+            }
         }
     }
 
@@ -349,7 +421,8 @@ extension CarouselComponent: UIPageViewControllerDataSource {
         )
                 
         self.lastSeenPageIndex = newPageIndex
-        
+        self.applyIndicatorStyles()
+
         self.lastAction = .pageChanged
         self.delegateLock.wait()
         self.interactionsManager?.pushNotification(eventArgs: .init(source: self), limitToNeighbours: true)
@@ -368,9 +441,10 @@ extension CarouselComponent: UIPageViewControllerDataSource {
 
 extension CarouselComponent: UIPageViewControllerDelegate {
     @MainActor public func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        
+
         self.pageControls?.currentPage = (self.viewControllers?.first as? CountedUIViewController)?.pageIndex ?? -1
-        
+        self.applyIndicatorStyles()
+
         if self.viewControllers?.first !== previousViewControllers.first {
             if let currentPage = self.viewControllers?.first as? BasicImagePage {
                 pageViewController.configureZoomHandling(for: currentPage)
