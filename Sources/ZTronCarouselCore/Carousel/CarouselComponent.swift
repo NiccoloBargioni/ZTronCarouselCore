@@ -256,10 +256,71 @@ open class CarouselComponent: UIPageViewController, Sendable, Component {
         present imageAtIndex: Int = 0,
         animated: Bool = false
     ) {
-        assert(other.count > 0)
-        assert(imageAtIndex >= 0 && imageAtIndex < other.count)
+        let resolution = self.resolveMediasForPresentation(other, requestedIndex: imageAtIndex)
+        self.presentResolvedMedias(resolution.medias, present: resolution.index, animated: animated)
+    }
+    
+    /// Template-method seam invoked by `replaceAllMedias(with:present:animated:)` before anything is
+    /// presented. Subclasses can override it to derive the medias that actually reach the screen from
+    /// the complete dataset they were handed (see `FilterableCarouselComponent`, which applies its
+    /// active filters here). `requestedIndex` is expressed in the coordinate space of `medias`.
+    ///
+    /// The default implementation is the identity: the dataset is presented unmodified.
+    open func resolveMediasForPresentation(
+        _ medias: [any VisualMediaDescriptor],
+        requestedIndex: Int
+    ) -> (medias: [any VisualMediaDescriptor], index: Int) {
+        return (medias, requestedIndex)
+    }
+    
+    /// The page displayed when a (possibly filtered) dataset resolves to zero medias.
+    /// Override to customize; the default reuses the same placeholder shown while no dataset is loaded.
+    open func makeEmptyPlaceholderPage() -> any CountedUIViewController {
+        return self.makePlaceholder()
+    }
+    
+    internal final func presentResolvedMedias(
+        _ other: [any VisualMediaDescriptor],
+        present imageAtIndex: Int,
+        animated: Bool
+    ) {
+        guard !other.isEmpty else {
+            self.medias = []
+            
+            Task(priority: .userInitiated) { @MainActor in
+                self.pageControls?.numberOfPages = 0
+                self.pageControls?.currentPage = 0
+            }
+            
+            self.viewControllers?.forEach { currentVC in
+                guard let currentVC = currentVC as? CountedUIViewController else { return }
+                
+                if let currentVC = (currentVC as? BasicImagePage) {
+                    self.removeZoomHandling(for: currentVC)
+                }
+                
+                currentVC.dismantle()
+            }
+            
+            self.setViewControllers([self.makeEmptyPlaceholderPage()], direction: .reverse, animated: false)
+            
+            self.lastSeenPageIndex = 0
+            self.lastAction = .replacedAllMedias
+            self.delegateLock.wait()
+            self.interactionsManager?.pushNotification(eventArgs: .init(source: self), limitToNeighbours: true)
+            self.delegateLock.signal()
+            return
+        }
         
-        if self.medias.count <= 0 {
+        #if DEBUG
+        if imageAtIndex < 0 || imageAtIndex >= other.count {
+            Self.logger.warning("Requested to present index \(imageAtIndex) but the valid range is [0, \(other.count)). Clamping.")
+        }
+        #endif
+        
+        let imageAtIndex = min(max(0, imageAtIndex), other.count - 1)
+        
+        if self.medias.count <= 0 && self.pageControls == nil {
             self.makePageControlsAndAddToSuperview()
             self.view.layoutIfNeeded()
         }

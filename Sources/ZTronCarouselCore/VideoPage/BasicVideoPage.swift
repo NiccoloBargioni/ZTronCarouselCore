@@ -43,12 +43,24 @@ public class BasicVideoPage: UIViewController, CountedUIVideoPageController {
         overlayFactory: any UIVideoOverlayFactory = BasicVideoOverlayFactory()
     ) {
         print("\(#function)")
-        guard let bundleURL = Bundle.main.url(forResource: videoDescriptor.getAssetName(), withExtension: videoDescriptor.getExtension()) else { return nil }
+        
+        // Second step of the fallback chain, still synchronous: the local CDN cache directory,
+        // checked only if the bundle doesn't have it. There is deliberately no third, async,
+        // network-fetch step here the way there is for images and the outline's SVG — see
+        // DESIGN.md for why video specifically needs more structural work before that's possible
+        // (this initializer sets up `TinyVideoPlayer`/`AVAsset` eagerly and synchronously, and
+        // there's no "start empty, populate later" story for that the way there is for a plain
+        // `UIImageView`). A video whose only copy lives on the CDN and was never synced still
+        // fails to load, exactly as before this feature existed — just from one more place to
+        // check first.
+        guard let localURL = Bundle.main.url(forResource: videoDescriptor.getAssetName(), withExtension: videoDescriptor.getExtension())
+            ?? CDNLocalStore.shared.existingLocalURL(identifier: videoDescriptor.getAssetName(), candidateExtensions: [videoDescriptor.getExtension()])
+        else { return nil }
         
         self.pageIndex = -1
-        self.video = bundleURL
+        self.video = localURL
         
-        self.videoPlayer = TinyVideoPlayer(resourceUrl: bundleURL)
+        self.videoPlayer = TinyVideoPlayer(resourceUrl: localURL)
         
         self.videoDuration = 0.0
                 
@@ -183,4 +195,18 @@ public class BasicVideoPage: UIViewController, CountedUIVideoPageController {
 @objc public protocol VideoPageDelegate: NSObjectProtocol {
     @objc optional func overlayDidShow(videoPage: BasicVideoPage)
     @objc optional func overlayDidHide(videoPage: BasicVideoPage)
+}
+
+
+extension BasicVideoPage: TinyPlayerDelegate {
+    public func player(_ player: TinyPlayer, didUpdatePlaybackPosition position: Float, playbackProgress: Float) {
+        self.videoOverlayView.setPlaybackProgress(to: playbackProgress)
+    }
+    
+    public func playerHasFinishedPlayingVideo(_ player: any TinyPlayer) {
+        if !self.isOverlayShowing {
+            self.videoOverlayView.summonOverlay()
+        }
+        self.videoOverlayView.didFinishPlayback()
+    }
 }
